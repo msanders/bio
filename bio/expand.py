@@ -1,15 +1,18 @@
-from .mass import MASS_TABLE, linearspectrum, suffix_spectrum
+from .mass import (
+    AMINO_MASSES, EXTENDED_ALPHABET, MASS_TABLE,
+    linearspectrum, suffix_spectrum
+)
 from .csequencing import score, overlapping, trim_scores
 import numpy as np
 
-def expand_spectrum(peptide: str,
-                    acid: str,
+def expand_spectrum(peptide: tuple,
+                    acid_mass: int,
                     old_spectrum: np.ndarray,
                     parent_spectrum: np.ndarray) -> np.ndarray:
     return overlapping(
         parent_spectrum, np.concatenate((
             old_spectrum,
-            suffix_spectrum(peptide, acid)
+            suffix_spectrum(peptide, acid_mass)
         ))
     )
 
@@ -31,23 +34,24 @@ def expand(peptides: list):
 def expanded(leaderboard: list,
              masses: dict,
              spectrums: dict,
-             parent_spectrum: np.ndarray) -> (list, dict, dict):
+             parent_spectrum: np.ndarray,
+             use_extended_alphabet=None) -> (list, dict, dict):
+    if use_extended_alphabet is None:
+        use_extended_alphabet = False
     expanded_leaderboard = []
     expanded_masses = {}
     expanded_spectrums = {}
     parent_mass = parent_spectrum[-1]
+    alphabet = EXTENDED_ALPHABET if use_extended_alphabet else AMINO_MASSES
 
-    for acid in MASS_TABLE:
-        if acid == 'K' or acid == 'L': # Treat K/Q and L/I as equal.
-            continue
-
-        acid_mass = MASS_TABLE[acid]
+    for acid_mass in alphabet:
         for peptide in leaderboard:
             if not peptide:
                 if acid_mass <= parent_mass:
-                    expanded_leaderboard.append(acid)
-                    expanded_masses[acid] = acid_mass
-                    expanded_spectrums[acid] =  overlapping(
+                    leader = (acid_mass,)
+                    expanded_leaderboard.append(leader)
+                    expanded_masses[leader] = acid_mass
+                    expanded_spectrums[leader] =  overlapping(
                         parent_spectrum,
                         np.array((0, acid_mass), dtype='i')
                     )
@@ -57,12 +61,12 @@ def expanded(leaderboard: list,
                     continue
 
                 old_spectrum = spectrums[peptide]
-                suffix = peptide + acid
+                suffix = peptide + (acid_mass,)
                 if suffix not in expanded_masses:
                     expanded_leaderboard.append(suffix)
                     expanded_masses[suffix] = new_mass
                     expanded_spectrums[suffix] = expand_spectrum(
-                        peptide, acid, old_spectrum, parent_spectrum
+                        peptide, acid_mass, old_spectrum, parent_spectrum
                     )
 
     return (expanded_leaderboard, expanded_masses, expanded_spectrums)

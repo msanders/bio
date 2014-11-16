@@ -75,7 +75,10 @@ def test_cyclopeptide_scored_sequence():
         n, spectrum = input_sample
         spectrum = np.asarray([int(x) for x in spectrum.split()], dtype='i')
         output = cyclopeptide_scored_sequence(n, spectrum)
-        assert output_sample.issubset(output), "{0} != {1}".format(output, output_sample)
+        assert output_sample.issubset(output), "!{0}.issubset{1}".format(
+            output_sample,
+            output
+        )
 
 
 def main():

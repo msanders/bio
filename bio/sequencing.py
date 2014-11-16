@@ -12,8 +12,11 @@ from .expand import expand, expanded, trim_expanded_spectrums, trim
 from itertools import permutations
 
 
-def peptide_code(peptide):
-    return "-".join(str(MASS_TABLE[c]) for c in peptide)
+def peptide_code(peptide: object):
+    if isinstance(peptide, str):
+        return "-".join(str(MASS_TABLE[c]) for c in peptide)
+    code = "-".join(str(x) for x in peptide)
+    return code
 
 
 def cyclopeptide_sequence(spectrum: [int]) -> {str}:
@@ -143,13 +146,13 @@ def main():
 
     #    print(codes)
 
-    with open("bio/data/spectrum_25_tyrocidine_b1.txt") as f:
+    with open("bio/data/dataset_103_1.txt") as f:
         codes = cyclopeptide_scored_sequence(
             1000,
             [int(x) for x in f.read().strip().split()]
         )
 
-        print("\n".join(" ".join(x) for x in codes))
+        print("\n".join(codes))
         lengths = [len(x[0]) for x in codes]
         for length in sorted(set(lengths)):
             print("{0} of length {1}".format(lengths.count(length), length))

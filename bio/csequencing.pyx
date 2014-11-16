@@ -33,7 +33,7 @@ def overlapping(np.ndarray ar1, np.ndarray ar2):
     return ar1[overlapping_indices(ar1, ar2).nonzero()]
 
 
-def score(str peptide, object spectrum, cycle=None):
+def score(object peptide, object spectrum, cycle=None):
     """
     Input: An amino acid string Peptide and a collection of integers Spectrum.
     Output: The score of Peptide against Spectrum, Score(Peptide, Spectrum).

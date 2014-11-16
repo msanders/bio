@@ -1,9 +1,8 @@
 import os
 import random
-from ..mass import MASS_TABLE
+from ..mass import MASS_TABLE, AMINO_MASSES, EXTENDED_ALPHABET
 
 DATA_DIR = os.path.join("bio", "data" ,"tests")
-AMINOS = [x for x in MASS_TABLE.keys() if x != "K" and x != "L"]
 
 
 def read(path: str) -> str:
@@ -29,12 +28,12 @@ def find_datasets(name, input_transform=None, output_transform=None):
     return datasets
 
 
-def random_peptide(length: int) -> str:
-    return "".join(random_amino() for _ in range(length))
+def random_peptide(length: int, extended=None) -> tuple:
+    return tuple(random_amino(extended) for _ in range(length))
 
 
-def random_amino() -> str:
-    return random.choice(AMINOS)
+def random_amino(extended=None) -> int:
+    return random.choice(EXTENDED_ALPHABET if extended else AMINO_MASSES)
 
 
 def spectrum_difference(ar1: [int], ar2: [int]) -> [int]:

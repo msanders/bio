@@ -29,7 +29,7 @@ def test_cyclospectrum():
 def test_suffix_spectrum():
     for length in range(1, 20):
         peptide, amino = random_peptide(length), random_amino()
-        new_peptide = peptide + amino
+        new_peptide = peptide + (amino,)
 
         old_spectrum = linearspectrum(peptide)
         new_spectrum = linearspectrum(new_peptide)
