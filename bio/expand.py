@@ -17,6 +17,9 @@ def expand_spectrum(peptide: str,
 def expand(peptides: list):
     new_peptides = []
     for acid in MASS_TABLE:
+        if acid == 'K' or acid == 'L': # Treat K/Q and L/I as equal.
+            continue
+
         for peptide in peptides:
             if not peptide:
                 new_peptides.append(acid)
