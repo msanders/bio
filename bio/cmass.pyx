@@ -99,6 +99,21 @@ def linearspectrum(object peptide):
     return spectrum(peptide, False)
 
 
+def convolution(np.ndarray spectrum):
+    """
+    Input: A collection of integers Spectrum.
+    Output: The list of elements in the convolution of Spectrum. If an element
+            has multiplicity k, it should appear exactly k times; you may 
+            return the elements in any order.
+    """
+    differences = []
+    for x in spectrum:
+        for y in spectrum:
+            if x > y:
+                differences.append(x - y)
+    return differences
+
+
 def suffix_spectrum(tuple peptide, int acid_mass):
     cdef:
         np.ndarray masses

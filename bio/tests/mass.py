@@ -1,4 +1,4 @@
-from ..mass import linearspectrum, cyclospectrum, suffix_spectrum
+from ..mass import linearspectrum, cyclospectrum, suffix_spectrum, convolution
 from ._lib import (
     find_datasets, random_peptide, random_amino, spectrum_difference
 )
@@ -39,10 +39,23 @@ def test_suffix_spectrum():
         assert np.array_equal(difference, output), "{0} != {1}".format(difference, output)
 
 
+def test_convolution():
+    dataset = [
+        ("0 137 186 323", "137 137 186 186 323 49")
+    ] + find_datasets("convolution")
+
+    for input_sample, output_sample in dataset:
+        spectrum = np.asarray([int(x) for x in input_sample.split()], dtype='i')
+        output_sample = [int(x) for x in output_sample.split()]
+        output = convolution(spectrum)
+        assert sorted(output) == sorted(output_sample), "{0} != {1}".format(output, output_sample)
+
+
 def main():
     test_linearspectrum()
     test_cyclospectrum()
     test_suffix_spectrum()
+    test_convolution()
     print("Success!")
 
 if __name__ == '__main__':

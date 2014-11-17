@@ -5,7 +5,7 @@ pyximport.install(setup_args={
     "include_dirs": np.get_include(),
 })  # pylint: disable=F0401
 from .cmass import (
-    mass, cyclospectrum, linearspectrum, suffix_spectrum,
+    mass, cyclospectrum, linearspectrum, suffix_spectrum, convolution,
     MASS_TABLE, EXTENDED_ALPHABET, AMINO_MASSES
 )  # pylint: disable=F0401
 
