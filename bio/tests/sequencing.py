@@ -33,22 +33,6 @@ def test_linear_score():
         assert output == output_sample, "{0} != {1}".format(output, output_sample)
 
 
-def test_trim():
-    dataset = [
-        (("LAST ALST TLLT TQAS", "0 71 87 101 113 158 184 188 259 271 372", 2),
-          "LAST ALST"),
-    ] + find_datasets("trim", lambda x: x.splitlines())
-
-    for input_sample, output_sample in dataset:
-        leaderboard, spectrum, n = input_sample
-        leaderboard = leaderboard.split()
-        spectrum = np.asarray([int(x) for x in spectrum.split()], dtype='i')
-        n = int(n)
-        output_sample = output_sample.split()
-        output = trim(leaderboard, spectrum, n)
-        assert np.array_equal(output, output_sample), "{0} != {1}".format(output, output_sample)
-
-
 def test_cyclopeptide_sequence():
     dataset = [
         ("0 113 128 186 241 299 314 427", { "186-128-113", "186-113-128",
@@ -84,7 +68,6 @@ def test_cyclopeptide_scored_sequence():
 def main():
     test_cyclic_score()
     test_linear_score()
-    test_trim()
     test_cyclopeptide_sequence()
     test_cyclopeptide_scored_sequence()
     print("Success!")

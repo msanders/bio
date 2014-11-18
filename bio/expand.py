@@ -2,7 +2,7 @@ from .mass import (
     AMINO_MASSES, EXTENDED_ALPHABET, MASS_TABLE,
     linearspectrum, suffix_spectrum
 )
-from .csequencing import score, overlapping, trim_scores
+from .csequencing import score, overlapping, trim_against
 import numpy as np
 
 def expand_spectrum(peptide: tuple,
@@ -79,14 +79,14 @@ def trim(leaderboard: list, parent_spectrum: np.ndarray, n: int) -> list:
         count=len(leaderboard)
     )
 
-    return trim_scores(leaderboard, scores, n)
+    return trim_against(leaderboard, scores, n)
 
 
 def trim_parallel(leaderboard: list, spectrum: np.ndarray, n: int) -> list:
     with ProcessPoolExecutor() as executor:
         scores = executor.map(ScoreCall(spectrum, False), leaderboard)
 
-    return trim_scores(
+    return trim_against(
         leaderboard,
         np.fromiter(scores, dtype='i', count=len(leaderboard)),
         n
@@ -100,7 +100,7 @@ def trim_expanded_spectrums(leaderboard, spectrums, comparison_spectrum, n):
         count=len(leaderboard)
     )
 
-    return trim_scores(leaderboard, scores, n)
+    return trim_against(leaderboard, scores, n)
 
 
 # Workaround for Python's annoying lack of closure support for concurrency.

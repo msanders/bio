@@ -47,40 +47,36 @@ def score(object peptide, object spectrum, cycle=None):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def trim_scores(list leaderboard, np.ndarray scores, int n):
+def trim_against(object ar1, object ar2, int n):
     cdef:
         np.intp_t i, j
         np.intp_t[:] sorted_indexes
-        int last_score = 0
-        int max_score
         list trimmed
 
-    if scores.size == 0:
-        return leaderboard
+    if len(ar2) == 0:
+        return ar1
+    elif n == 0:
+        return []
 
-    sorted_indexes = np.argsort(scores)
+    sorted_indexes = np.argsort(ar2)
     trimmed = []
 
-    # Add scores in descending order.
-    for i from scores.size > i >= 0:
+    for i from len(ar2) > i >= 0:
         j = sorted_indexes[i]
-        v = scores[j]
-        if i <= scores.size - n:
+        if i <= len(ar2) - n:
             break
 
-        trimmed.append(leaderboard[j])
+        trimmed.append(ar1[j])
 
     # Add equivalent items in original order.
-    if scores.size >= n:
-        last_score = scores[sorted_indexes[<int>scores.size - n]]
-        for i from 0 <= i <= scores.size - n:
+    if len(ar2) >= n:
+        last_value = ar2[sorted_indexes[<np.intp_t>len(ar2) - n]]
+        for i from 0 <= i <= len(ar2) - n:
             j = sorted_indexes[i]
-            v = scores[j]
-            if v != last_score:
+            v = ar2[j]
+            if v != last_value:
                 continue
 
-            trimmed.append(leaderboard[j])
+            trimmed.append(ar1[j])
 
-    #max_score = scores[sorted_indexes[<int>scores.size - 1]]
-    #print("Score: {0}, {1}".format(max_score, last_score))
     return trimmed
