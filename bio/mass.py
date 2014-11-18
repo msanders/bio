@@ -33,6 +33,17 @@ def linearspectrum_brute(peptide):
     return cyclospectrum_brute(peptide, cycle=False)
 
 
+def peptide_string(peptide: tuple) -> str:
+    alphabet = list(MASS_TABLE.keys())
+    values = list(MASS_TABLE.values())
+    output = ""
+    for num in peptide:
+        if num in values:
+            output += alphabet[values.index(num)]
+        else:
+            output += str(num)
+    return output
+
 def main():
     #print(" ".join(subpeptides("ELEL")))
     #print(" ".join([""] + subpeptides("NQEL") + ["NQEL"]))

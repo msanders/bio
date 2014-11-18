@@ -1,5 +1,6 @@
 from ..sequencing import (
-    score, cyclopeptide_sequence, cyclopeptide_scored_sequence, trim
+    score, cyclopeptide_sequence, cyclopeptide_scored_sequence,
+    convolution_cyclopeptide_sequence
 )
 from ._lib import find_datasets
 import numpy as np
@@ -59,7 +60,26 @@ def test_cyclopeptide_scored_sequence():
         n, spectrum = input_sample
         spectrum = np.asarray([int(x) for x in spectrum.split()], dtype='i')
         output = cyclopeptide_scored_sequence(n, spectrum)
-        assert output_sample.issubset(output), "!{0}.issubset{1}".format(
+        assert output_sample.issubset(output), "!{0}.issubset({1})".format(
+            output_sample,
+            output
+        )
+
+def test_convolution_cyclopeptide_sequence():
+    dataset = [
+        ((20, 60, "57 57 71 99 129 137 170 186 194 208 228 265 285 299 307 323 356 364 394 422 493"), {
+            "99-71-137-57-72-57"
+        })
+    ] + find_datasets("convolution_sequence",
+                      input_transform=lambda x: x.rstrip().splitlines(),
+                      output_transform=lambda x: set(x.split()))
+
+    for input_sample, output_sample in dataset:
+        m, n, spectrum = input_sample
+        m, n = int(m), int(n)
+        spectrum = np.asarray([int(x) for x in spectrum.split()], dtype='i')
+        output = convolution_cyclopeptide_sequence(m, n, spectrum)
+        assert output_sample.issubset(output), "!{0}.issubset({1})".format(
             output_sample,
             output
         )
@@ -70,6 +90,7 @@ def main():
     test_linear_score()
     test_cyclopeptide_sequence()
     test_cyclopeptide_scored_sequence()
+    test_convolution_cyclopeptide_sequence()
     print("Success!")
 
 if __name__ == '__main__':
