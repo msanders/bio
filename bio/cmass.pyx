@@ -109,7 +109,7 @@ def convolution(np.ndarray spectrum):
     differences = []
     for x in spectrum:
         for y in spectrum:
-            if x > y:
+            if x - y > 0:
                 differences.append(x - y)
     return differences
 
