@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import pyximport; pyximport.install()  # pylint: disable=F0401
-from chamming import hamming_distance, hamcount  # pylint: disable=F0401
+from .chamming import hamming_distance, hamcount  # pylint: disable=F0401
 from concurrent.futures import ProcessPoolExecutor
-from mutations import neighborhoods
-from numberpattern import all_nucleotides
-from reverse_complement import reverse_complement
+from .mutations import neighborhoods
+from .numberpattern import all_nucleotides
+from .reverse_complement import reverse_complement
 import sys
 
 

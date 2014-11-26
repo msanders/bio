@@ -1,7 +1,7 @@
 import pyximport; pyximport.install()
-from chamming import hamming_distance
-from numberpattern import all_nucleotides
-from reverse_complement import complement
+from .chamming import hamming_distance
+from .numberpattern import all_nucleotides
+from .reverse_complement import complement
 import itertools
 
 NUCLEOTIDES = "ATCG"
