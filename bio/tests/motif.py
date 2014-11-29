@@ -1,4 +1,7 @@
-from ..motif import motif_enumeration, parse_profile, profile_most_probable
+from ..motif import (
+    motif_enumeration, parse_profile, profile_most_probable,
+    greedy_motif_search
+)
 from ._lib import find_datasets
 
 
@@ -34,12 +37,31 @@ def test_profile_most_probable():
         profile, text, k = input_sample
         profile, k = parse_profile(profile), int(k)
         output = profile_most_probable(profile, text, k)
-        assert output_sample in output, "{0} != {1}".format(output, output_sample)
+        assert output_sample == output, "{0} != {1}".format(output, output_sample)
+
+
+def test_greedy_motif_search():
+    def parse_input(text):
+        lines = text.splitlines()
+        return "\n".join(lines[:-2]), lines[-2], lines[-1]
+
+    dataset = [
+        (("GGCGTTCAGGCA AAGAATCAGTCA CAAGGAGTTCGC CACGTCAATCAC CAATAATATTCG", 3, 5),
+          "CAG CAG CAA CAA CAA")
+    ] + find_datasets("greedy_motif_search", parse_input)
+
+    for input_sample, output_sample in dataset:
+        dna, k, t = input_sample
+        dna, k, t = dna.split(), int(k), int(t)
+        output = greedy_motif_search(dna, k, t)
+        output_sample = output_sample.split()
+        assert output_sample == output, "{0} != {1}".format(output, output_sample)
 
 
 def main():
     test_motif_enumeration()
     test_profile_most_probable()
+    test_greedy_motif_search()
     print("Success!")
 
 if __name__ == '__main__':

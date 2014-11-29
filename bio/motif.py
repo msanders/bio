@@ -1,5 +1,5 @@
 from .mutations import neighborhood
-from .hamming import hamcount
+from .hamming import hamcount, hamming_distance
 from functools import reduce
 import operator
 import numpy as np
@@ -36,23 +36,76 @@ def profile_most_probable(profile: [float], text: str, k: int) -> str:
     Input: A string Text, an integer k, and a 4 × k matrix Profile.
     Output: A Profile-most probable k-mer in Text.
     """
-    max_probability = 0
-    most_probable = set()
+    max_probability = -1
+    most_probable = None
     for start in (text[i:] for i in range(k)):
         for i in range(len(start) - k):
             kmer = start[i:i + k]
             probability = kmer_probability(profile, kmer)
             if probability > max_probability:
-                most_probable = {kmer}
+                most_probable = kmer
                 max_probability = probability
-            elif probability == max_probability:
-                most_probable.add(kmer)
     return most_probable
+
+
+def profile_from_dna(dna: [str]) -> [float]:
+    profile = np.zeros((4, len(dna[0])))
+    rows = ['A', 'C', 'G', 'T']
+    for text in dna:
+        for i, nucleotide in enumerate(text):
+            row = rows.index(nucleotide)
+            profile[row][i] += 1.0
+    profile /= float(len(dna))
+    return profile
 
 
 def parse_profile(input: str) -> [float]:
     return np.array([[np.float(x) for x in row.split()]
                      for row in input.strip().splitlines()])
+
+
+def find_consensus(motifs: [str]) -> str:
+    profile = profile_from_dna(motifs)
+    rows = ['A', 'C', 'G', 'T']
+    consensus = [""] * len(motifs[0])
+    max_probability = [0] * len(motifs[0])
+    for i, row in enumerate(profile):
+        for j, column in enumerate(row):
+            if column > max_probability[j]:
+                consensus[j] = rows[i]
+                max_probability[j] = column
+    return "".join(consensus)
+
+
+def score(motifs: [str]) -> int:
+    consensus = find_consensus(motifs)
+    score = 0
+    for motif in motifs:
+        score += hamming_distance(consensus, motif)
+    return score
+
+
+def greedy_motif_search(dna: [str], k: int, t: int):
+    best_motifs = [text[:k] for text in dna]
+    best_score = score(best_motifs)
+    #print(best_motifs)
+    #print(best_score)
+    for i in range(len(dna[0]) - k):
+        kmer = dna[0][i:i + k]
+        motif = [kmer]
+        for j in range(1, min(t, len(dna))):
+            #print("Motif: {0}".format(motif))
+            profile = profile_from_dna(motif)
+            most_probable = profile_most_probable(profile, dna[j], k)
+            if most_probable:
+                motif.append(most_probable)
+
+        motif_score = score(motif)
+        if motif_score < best_score:
+            best_motifs = motif
+            best_score = motif_score
+
+    return best_motifs
 
 
 def main():
