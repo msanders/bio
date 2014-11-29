@@ -48,13 +48,15 @@ def profile_most_probable(profile: [float], text: str, k: int) -> str:
     return most_probable
 
 
-def profile_from_dna(dna: [str]) -> [float]:
+def profile_from_dna(dna: [str], pseudocount: bool = False) -> [float]:
     profile = np.zeros((4, len(dna[0])))
     rows = ['A', 'C', 'G', 'T']
     for text in dna:
         for i, nucleotide in enumerate(text):
             row = rows.index(nucleotide)
             profile[row][i] += 1.0
+    if pseudocount:
+        profile += 1
     profile /= float(len(dna))
     return profile
 
@@ -64,8 +66,8 @@ def parse_profile(input: str) -> [float]:
                      for row in input.strip().splitlines()])
 
 
-def find_consensus(motifs: [str]) -> str:
-    profile = profile_from_dna(motifs)
+def find_consensus(motifs: [str], pseudocount: bool = False) -> str:
+    profile = profile_from_dna(motifs, pseudocount)
     rows = ['A', 'C', 'G', 'T']
     consensus = [""] * len(motifs[0])
     max_probability = [0] * len(motifs[0])
@@ -85,17 +87,14 @@ def score(motifs: [str]) -> int:
     return score
 
 
-def greedy_motif_search(dna: [str], k: int, t: int):
+def greedy_motif_search(dna: [str], k: int, t: int, pseudocount: bool = False):
     best_motifs = [text[:k] for text in dna]
     best_score = score(best_motifs)
-    #print(best_motifs)
-    #print(best_score)
     for i in range(len(dna[0]) - k):
         kmer = dna[0][i:i + k]
         motif = [kmer]
         for j in range(1, min(t, len(dna))):
-            #print("Motif: {0}".format(motif))
-            profile = profile_from_dna(motif)
+            profile = profile_from_dna(motif, pseudocount)
             most_probable = profile_most_probable(profile, dna[j], k)
             if most_probable:
                 motif.append(most_probable)
