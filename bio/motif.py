@@ -2,6 +2,7 @@ from .mutations import neighborhood
 from .hamming import hamcount
 from functools import reduce
 import operator
+import numpy as np
 
 def motif_enumeration(dna: [str], k: int, d: int) -> {str}:
     """
@@ -25,10 +26,12 @@ def motif_enumeration(dna: [str], k: int, d: int) -> {str}:
         return patterns
 
 
-def kmer_probability(profile: dict, kmer: str) -> float:
-    return reduce(operator.mul, (profile[x][i] for i, x in enumerate(kmer)))
+def kmer_probability(profile: [float], kmer: str) -> float:
+    rows = ['A', 'C', 'G', 'T']
+    return reduce(operator.mul, (profile[rows.index(x)][i]
+                  for i, x in enumerate(kmer)))
 
-def profile_most_probable(profile: dict, text: str, k: int) -> str:
+def profile_most_probable(profile: [float], text: str, k: int) -> str:
     """
     Input: A string Text, an integer k, and a 4 × k matrix Profile.
     Output: A Profile-most probable k-mer in Text.
@@ -47,12 +50,9 @@ def profile_most_probable(profile: dict, text: str, k: int) -> str:
     return most_probable
 
 
-def parse_profile(input: str) -> dict:
-    profile = {}
-    rows = ['A', 'C', 'G', 'T']
-    for i, row in enumerate(input.strip().splitlines()):
-        profile[rows[i]] = [float(x) for x in row.split()]
-    return profile
+def parse_profile(input: str) -> [float]:
+    return np.array([[np.float(x) for x in row.split()]
+                     for row in input.strip().splitlines()])
 
 
 def main():
