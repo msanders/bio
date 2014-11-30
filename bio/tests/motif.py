@@ -1,6 +1,6 @@
 from ..motif import (
     motif_enumeration, parse_profile, profile_most_probable,
-    greedy_motif_search
+    greedy_motif_search, randomized_motif_search_iterator
 )
 from ._lib import find_datasets
 
@@ -76,11 +76,33 @@ def test_greedy_pseudocount_motif_search():
         assert output_sample == output, "{0} != {1}".format(output, output_sample)
 
 
+def test_randomized_motif_search():
+    def parse_input(text):
+        lines = text.splitlines()
+        return "\n".join(lines[:-2]), lines[-2], lines[-1]
+
+    dataset = [
+        (("CGCCCCTCTCGGGGGTGTTCAGTAAACGGCCA GGGCGAGGTATGTGTAAGTGCCAAGGTGCCAG "
+          "TAGTACCGAGACCGAAAGAAGTATACAGGCGT TAGATCAAGTTTCAGGTGCACGTCGGTGAACC "
+          "AATCCACCAGCTCCACGTGCAATGTTGGCCTA", 8, 5),
+          "TCTCGGGG CCAAGGTG TACAGGCG TTCAGGTG TCCACGTG")
+    ] + find_datasets("randomized_motif_search", parse_input)
+
+    for input_sample, output_sample in dataset:
+        dna, k, t = input_sample
+        dna, k, t = dna.split(), int(k), int(t)
+        output = randomized_motif_search_iterator(dna, k, t, 1000,
+                                                  pseudocount=True)
+        output_sample = output_sample.split()
+        assert output_sample == output, "{0} != {1}".format(output, output_sample)
+
+
 def main():
     test_motif_enumeration()
     test_profile_most_probable()
     test_greedy_motif_search()
     test_greedy_pseudocount_motif_search()
+    test_randomized_motif_search()
     print("Success!")
 
 if __name__ == '__main__':
