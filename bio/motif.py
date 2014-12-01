@@ -110,9 +110,7 @@ def greedy_motif_search(dna: [str], k: int, t: int,
 
 def random_kmer(text: str, k: int) -> str:
     # Make sure we don't share state across threads.
-    r = random.Random()
-    r.seed()
-    i = r.randrange(len(text) - k + 1)
+    i = random.SystemRandom().randrange(len(text) - k + 1)
     return text[i:i + k]
 
 
@@ -151,8 +149,7 @@ class CurryMotifSearch(object):
 def randomized_motif_search_iterator(dna: [str], k: int, t: int,
                                      iterations: int,
                                      pseudocount: bool = False,
-                                     concurrent: bool = False) -> [str]:
-    random.seed()
+                                     concurrent: bool = True) -> [str]:
     best_motif = None
     best_score = float("inf")
 
