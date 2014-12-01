@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-import pyximport; pyximport.install()  # pylint: disable=F0401
+import numpy as np
+import pyximport
+pyximport.install(setup_args={
+    "include_dirs": np.get_include(),
+})  # pylint: disable=F0401
 from .chamming import hamming_distance, hamcount  # pylint: disable=F0401
 from concurrent.futures import ProcessPoolExecutor
 from .mutations import neighborhoods

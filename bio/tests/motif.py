@@ -1,6 +1,7 @@
 from ..motif import (
     motif_enumeration, parse_profile, profile_most_probable,
-    greedy_motif_search, randomized_motif_search_iterator
+    greedy_motif_search, sampling_iterator, randomized_motif_search,
+    gibbs_sampler
 )
 from ._lib import find_datasets
 
@@ -91,8 +92,10 @@ def test_randomized_motif_search():
     for input_sample, output_sample in dataset:
         dna, k, t = input_sample
         dna, k, t = dna.split(), int(k), int(t)
-        output = randomized_motif_search_iterator(dna, k, t, 1000,
-                                                  pseudocount=True)
+        output = sampling_iterator(randomized_motif_search, dna, k, t,
+                                   concurrent=True, pseudocount=True)
+        output_sample = output_sample.split()
+        assert output_sample == output, "{0} != {1}".format(output, output_sample)
         output_sample = output_sample.split()
         assert output_sample == output, "{0} != {1}".format(output, output_sample)
 
