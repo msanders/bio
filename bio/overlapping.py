@@ -1,6 +1,7 @@
 import numpy as np
 from .composition import string_composition
 
+
 def overlapping_patterns(patterns: [str]) -> dict:
     """
     Input: A collection Patterns of k-mers.
@@ -22,15 +23,26 @@ def overlapping_patterns(patterns: [str]) -> dict:
     return adjacent
 
 
+def de_bruijn_path(k: int, text: str) -> dict:
+    graph = {}
+    for i in range(len(text) - k + 1):
+        kmer = text[i:i + k]
+        prefix_node, suffix_node = kmer[:-1], kmer[1:]
+        if prefix_node not in graph:
+            graph[prefix_node] = []
+        graph[prefix_node].append(suffix_node)
+    return graph
+
+
 def main():
-    #patterns = "ATGCG GCATG CATGC AGGCA GGCAT".split()
-    with open("bio/data/dataset_198_9.txt") as f:
-        patterns = f.read().strip().split()
-        adjacent = overlapping_patterns(patterns)
-        for key in sorted(adjacent):
-            values = adjacent[key]
-            for value in values:
-                print("{0} -> {1}".format(key, value))
+    #text = "TAATGCCATGGGATGTT"
+    #adjacent = path_graph(3, text)
+    k = 4
+    text = f.read().strip()
+    adjacent = de_bruijn_path(k, text)
+    for key in sorted(adjacent):
+        values = adjacent[key]
+        print("{0} -> {1}".format(key, ",".join(values)))
 
 
 if __name__ == '__main__':
