@@ -8,8 +8,13 @@ def parse_graph_output(text: str) -> dict:
         key, values = x.split(":")
         if key not in out_dict:
             out_dict[key] = []
-        out_dict[key] += values.split(",")
+        out_dict[key] += sorted(values.split(","))
     return out_dict
+
+
+def sorted_graph(graph: dict) -> dict:
+    return {x: sorted(y) for x, y in graph.items()}
+
 
 def test_overlapping_patterns():
     dataset = [
@@ -35,8 +40,7 @@ def test_de_bruijn_path():
         k, text = input_sample
         k = int(k)
         output_sample = parse_graph_output(output_sample)
-        print(output_sample)
-        output = de_bruijn_path(k, text)
+        output = sorted_graph(de_bruijn_path(k, text))
         assert output == output_sample, "{0} != {1}".format(output, output_sample)
 
 
