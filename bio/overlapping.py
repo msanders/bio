@@ -24,9 +24,17 @@ def overlapping_patterns(patterns: [str]) -> dict:
 
 
 def de_bruijn_path(k: int, text: str) -> dict:
+    kmers = [text[i:i + k] for i in range(len(text) - k + 1)]
+    return de_bruijn_graph(kmers)
+
+
+def de_bruijn_graph(patterns: [str]) -> dict:
+    """
+    Input: A collection of k-mers Patterns.
+    Output: The adjacency list of the de Bruijn graph DeBruijn(Patterns).
+    """
     graph = {}
-    for i in range(len(text) - k + 1):
-        kmer = text[i:i + k]
+    for kmer in patterns:
         prefix_node, suffix_node = kmer[:-1], kmer[1:]
         if prefix_node not in graph:
             graph[prefix_node] = []
@@ -37,12 +45,13 @@ def de_bruijn_path(k: int, text: str) -> dict:
 def main():
     #text = "TAATGCCATGGGATGTT"
     #adjacent = path_graph(3, text)
-    k = 4
-    text = f.read().strip()
-    adjacent = de_bruijn_path(k, text)
-    for key in sorted(adjacent):
-        values = adjacent[key]
-        print("{0} -> {1}".format(key, ",".join(values)))
+    with open("bio/data/dataset_200_7.txt") as f:
+        #kmers = "GAGG CAGG GGGG GGGA CAGG AGGG GGAG".split()
+        kmers = f.read().strip().split()
+        adjacent = de_bruijn_graph(kmers)
+        for key in sorted(adjacent):
+            values = adjacent[key]
+            print("{0} -> {1}".format(key, ",".join(sorted(values))))
 
 
 if __name__ == '__main__':
