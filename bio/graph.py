@@ -1,5 +1,25 @@
 import numpy as np
 from .composition import string_composition
+import random
+
+
+def parse_graph(text: str) -> dict:
+    output = text.strip().replace(" -> ", ":").split()
+    graph = {}
+    for x in output:
+        key, values = x.split(":")
+        if key not in graph:
+            graph[key] = []
+        graph[key] += sorted(values.split(","))
+    return graph
+
+
+def path_to_graph(path: list) -> dict:
+    graph = {}
+    for i, x in enumerate(path):
+        if i < len(path) - 1 and x not in path:
+            graph[x] = path[i + 1]
+    return graph
 
 
 def overlapping_patterns(patterns: [str]) -> dict:
@@ -42,16 +62,54 @@ def de_bruijn_graph(patterns: [str]) -> dict:
     return graph
 
 
+def eulerian_cycle(graph: dict) -> list:
+    edges = [random.choice(list(graph.keys()))]
+    marks = set()
+    path = []
+    while edges:
+        node = edges[-1]
+        has_unmarked_edge = False
+        vertices = list(graph[node])
+        random.shuffle(vertices)
+        for vertex in vertices:
+            mark = (node, vertex)
+            if mark not in marks:
+                marks.add(mark)
+                edges.append(vertex)
+                has_unmarked_edge = True
+                break
+        if not has_unmarked_edge:
+            path.append(edges.pop())
+
+
+    return list(reversed(path))
+
+
 def main():
+    graph = """
+    0 -> 3
+    1 -> 0
+    2 -> 1,6
+    3 -> 2
+    4 -> 2
+    5 -> 4
+    6 -> 5,8
+    7 -> 9
+    8 -> 7
+    9 -> 6
+    """
+    print("->".join(eulerian_cycle_sketch(parse_graph(graph))))
+    #with open("bio/data/dataset_203_2.txt") as f:
+    #    graph = f.read().strip()
     #text = "TAATGCCATGGGATGTT"
     #adjacent = path_graph(3, text)
-    with open("bio/data/dataset_200_7.txt") as f:
-        #kmers = "GAGG CAGG GGGG GGGA CAGG AGGG GGAG".split()
-        kmers = f.read().strip().split()
-        adjacent = de_bruijn_graph(kmers)
-        for key in sorted(adjacent):
-            values = adjacent[key]
-            print("{0} -> {1}".format(key, ",".join(sorted(values))))
+    #with open("bio/data/dataset_200_7.txt") as f:
+    #    #kmers = "GAGG CAGG GGGG GGGA CAGG AGGG GGAG".split()
+    #    kmers = f.read().strip().split()
+    #    adjacent = de_bruijn_graph(kmers)
+    #    for key in sorted(adjacent):
+    #        values = adjacent[key]
+    #        print("{0} -> {1}".format(key, ",".join(sorted(values))))
 
 
 if __name__ == '__main__':
