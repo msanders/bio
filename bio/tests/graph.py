@@ -1,4 +1,4 @@
-from ..overlapping import overlapping_patterns, de_bruijn_path, de_bruijn_graph
+from ..graph import overlapping_patterns, de_bruijn_path, de_bruijn_graph
 from ._lib import find_datasets
 
 def parse_graph_output(text: str) -> dict:
