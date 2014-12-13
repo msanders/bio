@@ -1,6 +1,6 @@
 from ..graph import (
     overlapping_patterns, de_bruijn_path, de_bruijn_graph, parse_graph,
-    eulerian_cycle, path_to_graph
+    eulerian_cycle, path_to_graph, euler_path, build_di_graph
 )
 from ._lib import find_datasets
 
@@ -63,11 +63,26 @@ def test_eulerian_cycle():
             "{0} != {1}".format(output, output_sample)
 
 
+def test_euler_path():
+    dataset = [
+        ("0 -> 2 1 -> 3 2 -> 1 3 -> 0,4 6 -> 3,7 7 -> 8 8 -> 9 9 -> 6",
+         "6->7->8->9->6->3->0->2->1->3->4")
+    ] + find_datasets("euler_path")
+
+    for input_sample, output_sample in dataset:
+        graph = build_di_graph(parse_graph(input_sample))
+        output = euler_path(graph)
+        output_sample = output_sample.split("->")
+        assert output_sample == output, \
+            "{0} != {1}".format(output, output_sample)
+
+
 def main():
-    test_overlapping_patterns()
+    #test_overlapping_patterns()
     test_de_bruijn_path()
     test_de_bruijn_graph()
     test_eulerian_cycle()
+    test_euler_path()
     print("Success!")
 
 if __name__ == '__main__':

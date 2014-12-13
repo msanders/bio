@@ -1,6 +1,7 @@
 import numpy as np
 from .composition import string_composition
 import random
+import networkx as nx
 
 
 def parse_graph(text: str) -> dict:
@@ -11,6 +12,14 @@ def parse_graph(text: str) -> dict:
         if key not in graph:
             graph[key] = []
         graph[key] += sorted(values.split(","))
+    return graph
+
+
+def build_di_graph(nodes: dict) -> nx.DiGraph:
+    graph = nx.DiGraph()
+    for node, values in nodes.items():
+        for vertex in values:
+            graph.add_edge(node, vertex, label="{0}->{1}".format(node, vertex))
     return graph
 
 
@@ -63,6 +72,9 @@ def de_bruijn_graph(patterns: [str]) -> dict:
 
 
 def eulerian_cycle(graph: dict) -> list:
+    """
+    Adopted from http://www.ms.uky.edu/~lee/ma515fa10/euler.pdf
+    """
     edges = [random.choice(list(graph.keys()))]
     marks = set()
     path = []
@@ -83,6 +95,56 @@ def eulerian_cycle(graph: dict) -> list:
 
 
     return list(reversed(path))
+
+
+def eulerian_cycle2(graph: dict) -> list:
+    graph = build_di_graph(graph)
+    return [
+        x[0] for x in nx.eulerian_circuit(graph, random.choice(graph.nodes()))
+    ]
+
+
+def find_degrees(graph: nx.DiGraph) -> (dict, dict):
+    in_degrees = {}
+    out_degrees = {}
+    for left, values in graph.items():
+        out_degrees[right] = len(values)
+        for right in values:
+            in_degrees[right] = in_degrees.get(right, 0) + 1
+    return in_degrees, out_degrees
+
+
+def in_out_balance(graph: nx.DiGraph, node: object):
+    return graph.in_degree(node) - graph.out_degree(node)
+
+
+def balance_graph(graph: nx.DiGraph) -> (object, object):
+    head = None
+    tail = None
+    marked_nodes = set()
+    for node in graph:
+        balance = in_out_balance(graph, node)
+        if abs(balance) > 1:
+            raise ValueError("Cannot balance graph: {0}".format(graph))
+        elif balance == 1:
+            tail = node
+        elif balance == -1:
+            head = node
+
+    edge = (tail, head)
+    if head is not None:
+        graph.add_edge(*edge)
+    return edge
+
+
+def euler_path(graph: nx.DiGraph) -> list:
+    edge = balance_graph(graph)
+    if not nx.is_eulerian(graph):
+        raise ValueError("Not Eulerian: {0}".format(graph))
+
+    circuit = list(nx.eulerian_circuit(graph, edge[1]))
+    return [x[0] for x in circuit]
+
 
 
 def main():
