@@ -146,6 +146,15 @@ def euler_path(graph: nx.DiGraph) -> list:
     return [x[0] for x in circuit]
 
 
+def reconstruct_string(patterns: [str], k: int) -> str:
+    """
+    Input: An integer k followed by a list of k-mers Patterns.
+    Output: A string Text with k-mer composition equal to Patterns.
+    """
+    graph = de_bruijn_graph(patterns)
+    graph = build_di_graph(graph)
+    return genome_path_string(euler_path(graph))
+
 
 def main():
     graph = """

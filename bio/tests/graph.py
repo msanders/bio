@@ -1,6 +1,7 @@
 from ..graph import (
     overlapping_patterns, de_bruijn_path, de_bruijn_graph, parse_graph,
-    eulerian_cycle, path_to_graph, euler_path, build_di_graph
+    eulerian_cycle, path_to_graph, euler_path, build_di_graph,
+    reconstruct_string
 )
 from ._lib import find_datasets
 
@@ -77,12 +78,30 @@ def test_euler_path():
             "{0} != {1}".format(output, output_sample)
 
 
+def test_reconstruct_string():
+    def parse_input(text):
+        lines = text.splitlines()
+        return lines[0], "\n".join(lines[1:])
+
+    dataset = [
+        ((4, "CTTA ACCA TACC GGCT GCTT TTAC"), "GGCTTACCA")
+    ] + find_datasets("reconstruct_string", parse_input)
+
+    for input_sample, output_sample in dataset:
+        k, kmers = input_sample
+        k, kmers = int(k), kmers.split()
+        output = reconstruct_string(kmers, k)
+        assert output_sample == output, \
+            "{0} != {1}".format(output, output_sample)
+
+
 def main():
     #test_overlapping_patterns()
     test_de_bruijn_path()
     test_de_bruijn_graph()
     test_eulerian_cycle()
     test_euler_path()
+    test_reconstruct_string()
     print("Success!")
 
 if __name__ == '__main__':

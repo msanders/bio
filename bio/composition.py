@@ -10,7 +10,7 @@ def string_composition(text: str, k: int) -> [str]:
     return kmers
 
 
-def genome_path_string(kmers: [str]):
+def genome_path_string(kmers: [str]) -> str:
     """
     String Spelled by a Genome Path Problem: Reconstruct a string from its
                                              genome path.
