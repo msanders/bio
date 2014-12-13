@@ -1,5 +1,7 @@
+import numpy as np
 from .mutations import neighborhood
 from .hamming import hamcount, hamming_distance
+from .cmotif import kmer_probability
 from functools import reduce
 from concurrent.futures import ProcessPoolExecutor
 import operator
@@ -26,12 +28,6 @@ def motif_enumeration(dna: [str], k: int, d: int) -> {str}:
                     patterns.add(pattern_prime)
         return patterns
 
-
-def kmer_probability(profile: [[float]], kmer: str) -> float:
-    rows = ['A', 'C', 'G', 'T']
-    return reduce(operator.mul, (profile[rows.index(x)][i]
-                  for i, x in enumerate(kmer)))
-
 def profile_most_probable(profile: [[float]], text: str, k: int) -> str:
     """
     Input: A string Text, an integer k, and a 4 × k matrix Profile.
@@ -49,7 +45,7 @@ def profile_most_probable(profile: [[float]], text: str, k: int) -> str:
 
 
 def profile_from_dna(dna: [str], pseudocount: bool = False) -> [[float]]:
-    profile = np.zeros((4, len(dna[0])))
+    profile = np.zeros((4, len(dna[0])), dtype=np.longdouble)
     rows = ['A', 'C', 'G', 'T']
     for text in dna:
         for i, nucleotide in enumerate(text):
@@ -128,37 +124,78 @@ def randomized_motif_search(dna: [str], k: int, t: int,
         motifs = probable_motifs(profile, dna, k)
         motifs_score = score(motifs)
         if motifs_score < best_score:
-            best_motifs = motifs
-            best_score = motifs_score
+            best_motifs, best_score = motifs, motifs_score
         else:
             return best_motifs, best_score
 
 
-class CurryMotifSearch(object):
-    def __init__(self, dna: [str], k: int, t: int, pseudocount: bool):
-        self.dna = dna
-        self.k = k
-        self.t = t
-        self.pseudocount = pseudocount
+def gibb_roll(sides: int, biases: list):
+    assert len(biases) == sides
+    number = np.longdouble(random.uniform(0.0, np.sum(biases)))
+    current = np.longdouble(0.0)
+    for i, bias in enumerate(biases):
+        current += bias
+        if current >= number:
+            return i
+
+
+def probability_matrix(profile: [[float]], text: str, k: int) -> [float]:
+    probabilities = np.empty(len(text) - k + 1, dtype=np.longdouble)
+    for i in range(len(text) - k + 1):
+        kmer = text[i:i + k]
+        probabilities[i] = kmer_probability(profile, kmer)
+    return probabilities
+
+
+def profile_random_kmer(profile: [[float]], text: str, k: int) -> str:
+    probabilities = probability_matrix(profile, text, k)
+    i = gibb_roll(len(probabilities), probabilities)
+    return text[i:i + k]
+
+
+def gibbs_sampler(dna: [str], k: int, t: int, n: int,
+                  pseudocount: bool = False) -> ([str], int):
+    motifs = [random_kmer(text, k) for text in dna]
+    best_motifs = motifs
+    best_score = score(best_motifs)
+    for j in range(1, n):
+        i = random.SystemRandom().randrange(0, t)
+        remaining_dna = motifs.copy()
+        del remaining_dna[i]
+        profile = profile_from_dna(remaining_dna, pseudocount)
+        motifs[i] = profile_random_kmer(profile, dna[i], k)
+        motifs_score = score(motifs)
+        if motifs_score < best_score:
+            best_motifs, best_score = motifs, motifs_score
+    return best_motifs, best_score
+
+
+class CurrySampler(object):
+    def __init__(self, sampler, *args, **kwargs):
+        self.sampler = sampler
+        self.args = args
+        self.kwargs = kwargs
 
     def __call__(self, *args):
-        return randomized_motif_search(self.dna, self.k, self.t,
-                                       self.pseudocount)
+        return self.sampler(*self.args, **self.kwargs)
 
 
-def randomized_motif_search_iterator(dna: [str], k: int, t: int,
-                                     iterations: int,
-                                     pseudocount: bool = False,
-                                     concurrent: bool = True) -> [str]:
+def sampling_iterator(sampler: object,
+                      *args,
+                      iterations: int = 1000,
+                      pseudocount: bool = False,
+                      concurrent: bool = False) -> [str]:
+    random.seed()
     best_motif = None
     best_score = float("inf")
 
     if concurrent:
         with ProcessPoolExecutor() as executor:
-            motifs = executor.map(CurryMotifSearch(dna, k, t, pseudocount),
+            motifs = executor.map(CurrySampler(sampler, *args,
+                                               pseudocount=pseudocount),
                                   range(iterations))
     else:
-        motifs = [randomized_motif_search(dna, k, t, pseudocount)
+        motifs = [sampler(*args, pseudocount=pseudocount)
                   for _ in range(iterations)]
 
     for motif, motif_score in motifs:
