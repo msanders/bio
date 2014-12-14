@@ -1,7 +1,8 @@
 import numpy as np
-from .composition import string_composition
-import random
+from .composition import string_composition, genome_path_string
+from .numberpattern import generate_kmers
 import networkx as nx
+import random
 
 
 def parse_graph(text: str) -> dict:
@@ -143,6 +144,7 @@ def euler_path(graph: nx.DiGraph) -> list:
         raise ValueError("Not Eulerian: {0}".format(graph))
 
     circuit = list(nx.eulerian_circuit(graph, edge[1]))
+    return [ genome_path_string(x) for x in circuit ]
     return [x[0] for x in circuit]
 
 
@@ -153,23 +155,43 @@ def reconstruct_string(patterns: [str], k: int) -> str:
     """
     graph = de_bruijn_graph(patterns)
     graph = build_di_graph(graph)
-    return genome_path_string(euler_path(graph))
+    return genome_path_string(euler_path(graph)[:-1])
+
+
+def binary_strings(k: int) -> [str]:
+    return generate_kmers("01", k)
+
+
+def is_universal(text: str, k) -> bool:
+    kmers = list(binary_strings(k))
+    rotated_text = text + text[:k - 1]
+    count = 0
+    for kmer in kmers:
+        if rotated_text.count(kmer) != 1:
+            return False
+        count += 1
+    return count == len(kmers)
+
+
+def universal_circular_string(k: int) -> str:
+    kmers = list(binary_strings(k))
+    graph = de_bruijn_graph(kmers)
+    path = euler_path(build_di_graph(graph))
+    return genome_path_string(path[:-(k - 1)])
 
 
 def main():
-    graph = """
-    0 -> 3
-    1 -> 0
-    2 -> 1,6
-    3 -> 2
-    4 -> 2
-    5 -> 4
-    6 -> 5,8
-    7 -> 9
-    8 -> 7
-    9 -> 6
-    """
-    print("->".join(eulerian_cycle_sketch(parse_graph(graph))))
+    #print(is_universal(3, "0001110100"))
+    print(is_universal(4, "0000110010111101"))
+    #print(is_universal(4, "0001111011001010000"))
+    k = 4
+    t = universal_circular_string(k)
+    print(t)
+    print(is_universal(k, t))
+    #with open("bio/data/dataset_203_6.txt") as f:
+    #    kmers = f.read().strip().split()
+    #    print(reconstruct_string(kmers, 25))
+    #print("->".join(eulerian_cycle_sketch(parse_graph(graph))))
     #with open("bio/data/dataset_203_2.txt") as f:
     #    graph = f.read().strip()
     #text = "TAATGCCATGGGATGTT"

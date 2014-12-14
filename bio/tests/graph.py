@@ -1,7 +1,7 @@
 from ..graph import (
     overlapping_patterns, de_bruijn_path, de_bruijn_graph, parse_graph,
     eulerian_cycle, path_to_graph, euler_path, build_di_graph,
-    reconstruct_string
+    reconstruct_string, universal_circular_string, is_universal
 )
 from ._lib import find_datasets
 
@@ -74,7 +74,7 @@ def test_euler_path():
         graph = build_di_graph(parse_graph(input_sample))
         output = euler_path(graph)
         output_sample = output_sample.split("->")
-        assert output_sample == output, \
+        assert path_to_graph(output_sample) == path_to_graph(output), \
             "{0} != {1}".format(output, output_sample)
 
 
@@ -95,6 +95,18 @@ def test_reconstruct_string():
             "{0} != {1}".format(output, output_sample)
 
 
+def test_universal_circular_string():
+    dataset = [
+        (4, "0000110010111101")
+    ] + find_datasets("universal_circular_string")
+
+    for input_sample, output_sample in dataset:
+        k = int(input_sample)
+        output = universal_circular_string(k)
+        assert is_universal(output, k) and is_universal(output_sample, k), \
+            "{0} != {1}".format(output, output_sample)
+
+
 def main():
     #test_overlapping_patterns()
     test_de_bruijn_path()
@@ -102,6 +114,7 @@ def main():
     test_eulerian_cycle()
     test_euler_path()
     test_reconstruct_string()
+    test_universal_circular_string()
     print("Success!")
 
 if __name__ == '__main__':
