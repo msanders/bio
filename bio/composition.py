@@ -27,10 +27,44 @@ def genome_path_string(kmers: [str]) -> str:
     return pattern
 
 
+def paired_composition(text: str, k: int, d: int) -> [(str, str)]:
+    kmercount = len(text) - k + 1
+    pairs = []
+    for i in range(kmercount):
+        d_offset = i + d + k
+        if d_offset + k < len(text):
+            pairs.append((text[i:i + k], text[d_offset:d_offset + k]))
+    pairs.sort()
+    return pairs
+
+
+def string_spelled_by_gapped_patterns(patterns: [(str, str)], d: int) -> str:
+    first_patterns = [x[0] for x in patterns]
+    second_patterns = [x[1] for x in patterns]
+    k = len(first_patterns[0])
+    prefix_string = genome_path_string(first_patterns)
+    suffix_string = genome_path_string(second_patterns)
+    for i in range(k + d + 1, len(prefix_string)):
+        if prefix_string[i] != suffix_string[i - k - d]:
+            return None
+    return prefix_string + suffix_string[-(k + d):]
+
+
+def parse_patterns(text: str) -> [(str, str)]:
+    text = text.replace("(", "").replace(")", "")
+    return [x.split("|") for x in text.split()]
+
+
 def main():
-    with open("bio/data/dataset_198_3.txt") as f:
-        kmers = f.read().strip().split()
-        print(genome_path_string(kmers))
+    with open("bio/data/dataset_6206_7.txt") as f:
+        patterns = parse_patterns(f.read().strip())
+        #patterns = parse_patterns("GACC|GCGC ACCG|CGCC CCGA|GCCG CGAG|CCGG GAGC|CGGA")
+        print(string_spelled_by_gapped_patterns(patterns, 200))
+    #print(paired_composition("TAATGCCATGGGATGTT", 3, 2))
+    #print(" ".join("(" + "|".join(x) + ")" for x in paired_composition("TAATGCCATGGGATGTT", 3, 2)))
+    #with open("bio/data/dataset_198_3.txt") as f:
+    #    kmers = f.read().strip().split()
+    #    print(genome_path_string(kmers))
     #print("\n".join(string_composition("CAATCCAAC", 5)))
 
 
