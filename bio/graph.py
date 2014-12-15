@@ -1,5 +1,8 @@
 import numpy as np
-from .composition import string_composition, genome_path_string
+from .composition import (
+    string_composition, genome_path_string, paired_composition, parse_patterns,
+    string_spelled_by_gapped_patterns
+)
 from .numberpattern import generate_kmers
 import networkx as nx
 import random
@@ -21,6 +24,15 @@ def build_di_graph(nodes: dict) -> nx.DiGraph:
     for node, values in nodes.items():
         for vertex in values:
             graph.add_edge(node, vertex, label="{0}->{1}".format(node, vertex))
+    return graph
+
+
+def build_dict_graph(nodes: nx.DiGraph) -> dict:
+    graph = {}
+    for left, right in nodes.edges():
+        if left not in graph:
+            graph[left] = []
+        graph[left].append(right)
     return graph
 
 
@@ -72,11 +84,22 @@ def de_bruijn_graph(patterns: [str]) -> dict:
     return graph
 
 
-def eulerian_cycle(graph: dict) -> list:
+def paired_de_bruijn_graph(pairs: [(str, str)]) -> dict:
+    graph = {}
+    for pair in pairs:
+        prefix_node = tuple(kmer[:-1] for kmer in pair)
+        suffix_node = tuple(kmer[1:] for kmer in pair)
+        if prefix_node not in graph:
+            graph[prefix_node] = []
+        graph[prefix_node].append(suffix_node)
+    return graph
+
+
+def eulerian_cycle(graph: dict, start=None) -> list:
     """
     Adopted from http://www.ms.uky.edu/~lee/ma515fa10/euler.pdf
     """
-    edges = [random.choice(list(graph.keys()))]
+    edges = [start or random.choice(list(graph.keys()))]
     marks = set()
     path = []
     while edges:
@@ -138,14 +161,24 @@ def balance_graph(graph: nx.DiGraph) -> (object, object):
     return edge
 
 
-def euler_path(graph: nx.DiGraph) -> list:
+def euler_path(graph: nx.DiGraph, func=genome_path_string) -> list:
     edge = balance_graph(graph)
     if not nx.is_eulerian(graph):
         raise ValueError("Not Eulerian: {0}".format(graph))
 
     circuit = list(nx.eulerian_circuit(graph, edge[1]))
-    return [ genome_path_string(x) for x in circuit ]
-    return [x[0] for x in circuit]
+    #print("asdf {0}".format(circuit))
+    #return [ func(x) for x in circuit ]
+    return [x[0] for x in circuit] + [ circuit[0][0] ]
+
+
+def euler_path2(graph: dict) -> list:
+    nx_graph = build_di_graph(graph)
+    edge = balance_graph(nx_graph)
+    if not nx.is_eulerian(nx_graph):
+        raise ValueError("Not Eulerian: {0}".format(graph))
+
+    return eulerian_cycle(build_dict_graph(nx_graph), edge[1])
 
 
 def reconstruct_string(patterns: [str], k: int) -> str:
@@ -178,6 +211,14 @@ def universal_circular_string(k: int) -> str:
     graph = de_bruijn_graph(kmers)
     path = euler_path(build_di_graph(graph))
     return genome_path_string(path[:-(k - 1)])
+
+def brute_readpair_reconstruction(pairs: [(str, str)], d: int) -> str:
+    for _ in range(5000):
+        path = euler_path(build_di_graph(paired_de_bruijn_graph(pairs)))
+        text = string_spelled_by_gapped_patterns(path, d)
+        if text is not None:
+            break
+    return text
 
 
 def main():
