@@ -212,13 +212,21 @@ def universal_circular_string(k: int) -> str:
     path = euler_path(build_di_graph(graph))
     return genome_path_string(path[:-(k - 1)])
 
+
 def brute_readpair_reconstruction(pairs: [(str, str)], d: int) -> str:
-    for _ in range(5000):
-        path = euler_path(build_di_graph(paired_de_bruijn_graph(pairs)))
-        text = string_spelled_by_gapped_patterns(path, d)
-        if text is not None:
-            break
-    return text
+    checked_paths = set()
+    for _ in range(30000):
+        try:
+            path = euler_path2(paired_de_bruijn_graph(pairs))
+        except ValueError:
+            continue
+        hash_path = "->".join("|".join(x) for x in path)
+        if hash_path not in checked_paths:
+            text = string_spelled_by_gapped_patterns(path, d)
+            checked_paths.add(hash_path)
+            if text is not None:
+                return text
+    return None
 
 
 def main():
