@@ -229,6 +229,60 @@ def brute_readpair_reconstruction(pairs: [(str, str)], d: int) -> str:
     return None
 
 
+def is_in_1_out_1(graph: nx.DiGraph, node: object) -> bool:
+    in_degree = graph.in_degree(node)
+    out_degree = graph.out_degree(node)
+    return in_degree == 1 and out_degree == 1
+
+
+def format_pairs(pairs: [(str, str)]) -> str:
+    return "->".join("|".join(x) for x in pairs)
+
+
+def isolated_cycles(graph: nx.DiGraph) -> list:
+    cycles = []
+    cycled_nodes = set()
+    for node in graph:
+        w = node
+        cycle = [w]
+        is_isolated_cycle = True
+        while is_isolated_cycle:
+            if not is_in_1_out_1(graph, w) or w in cycled_nodes:
+                is_isolated_cycle = False
+            elif w == node:
+                break
+            else:
+                u = graph.edges(w)[0][1]
+                cycle.append(u)
+                w = u
+
+        if is_isolated_cycle:
+            cycles.append(cycle)
+            cycled_nodes.add(node)
+    return cycles
+
+
+def maximal_non_branching_paths(graph: nx.DiGraph) -> list:
+    paths = []
+    for node in graph:
+        if not is_in_1_out_1(graph, node) and graph.out_degree(node) > 0:
+            for v, w in graph.edges(node):
+                non_branching_path = [v, w]
+                while is_in_1_out_1(graph, w):
+                    u = graph.edges(w)[0][1]
+                    non_branching_path.append(u)
+                    w = u
+                paths.append(non_branching_path)
+
+    return paths + isolated_cycles(graph)
+
+
+def contig_generation(kmers: [str]) -> [str]:
+    graph = de_bruijn_graph(kmers)
+    paths = maximal_non_branching_paths(build_di_graph(graph))
+    return sorted(genome_path_string(path) for path in paths)
+
+
 def main():
     #print(is_universal(3, "0001110100"))
     print(is_universal(4, "0000110010111101"))
