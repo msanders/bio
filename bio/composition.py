@@ -32,7 +32,7 @@ def paired_composition(text: str, k: int, d: int) -> [(str, str)]:
     pairs = []
     for i in range(kmercount):
         d_offset = i + d + k
-        if d_offset + k < len(text):
+        if d_offset + k <= len(text):
             pairs.append((text[i:i + k], text[d_offset:d_offset + k]))
     pairs.sort()
     return pairs
