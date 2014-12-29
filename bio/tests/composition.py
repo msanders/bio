@@ -38,7 +38,10 @@ def test_string_spelled_by_gapped_patterns():
 
     dataset = [
         ((2, "GACC|GCGC ACCG|CGCC CCGA|GCCG CGAG|CCGG GAGC|CGGA"),
-         "GACCGAGCGCCGGA")
+         "GACCGAGCGCCGGA"),
+         ((1, "TAA|GCC AAT|CCA ATG|CAT TGC|ATG GCC|TGG CCA|GGG CAT|GGA "
+              "ATG|GAT TGG|ATG GGG|TGT GGA|GTT"),
+         "TAATGCCATGGGATGTT")
     ] + find_datasets("string_spelled_by_gapped_patterns", parse_input)
 
     for input_sample, output_sample in dataset:
