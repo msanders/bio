@@ -39,15 +39,20 @@ def paired_composition(text: str, k: int, d: int) -> [(str, str)]:
 
 
 def string_spelled_by_gapped_patterns(patterns: [(str, str)], d: int) -> str:
+    k = len(patterns[0][0])
+    strings = [patterns[0][i] + ''.join(map(lambda x: x[i][-1], patterns[1:])) for i in range(2)]
+    return strings[0][:(k+d)]+strings[1]
+
+
     first_patterns = [x[0] for x in patterns]
     second_patterns = [x[1] for x in patterns]
     k = len(first_patterns[0])
     prefix_string = genome_path_string(first_patterns)
     suffix_string = genome_path_string(second_patterns)
     for i in range(k + d + 1, len(prefix_string)):
-        if prefix_string[i] != suffix_string[i - k - d]:
+        if prefix_string[i] != suffix_string[i - k - d - 1]:
             return None
-    return prefix_string + suffix_string[-(k + d):]
+    return prefix_string + suffix_string[-(k + d + 1):]
 
 
 def parse_patterns(text: str) -> [(str, str)]:
