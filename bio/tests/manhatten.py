@@ -1,4 +1,6 @@
-from ..manhatten import manhatten_tourist, parse_tourist_input
+from ..manhatten import (
+    manhatten_tourist, parse_tourist_input, output_lcs, lcs_backtrack, lcs_path
+)
 from ._lib import find_datasets
 
 def test_manhatten_tourist():
@@ -23,8 +25,20 @@ def test_manhatten_tourist():
         assert manhatten_tourist(n, m, down, right) == int(output_sample)
 
 
+def test_output_lcs():
+    dataset = [("AACCTTGG ACACTGTGA", "AACTTG")] + find_datasets("output_lcs")
+
+
+    for input_sample, output_sample in dataset:
+        v, w = input_sample.strip().split()
+        backtrack = lcs_backtrack(lcs_path(v, w))
+        output = output_lcs(backtrack, v, w)
+        assert output == output_sample, "{0} != {1}".format(output, output_sample)
+
+
 def main():
     test_manhatten_tourist()
+    test_output_lcs()
     print("Success!")
 
 

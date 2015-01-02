@@ -31,7 +31,57 @@ def parse_tourist_input(text: str) -> (int, int, np.ndarray, np.ndarray):
     return n, m, down, right
 
 
+def lcs_path(v: str, w: str) -> np.ndarray:
+    s = np.zeros((len(v) + 1,len(w) + 1), dtype='i')
+    for i in range(len(v)):
+        for j in range(len(w)):
+            if v[i] == w[j]:
+                s[i + 1][j + 1] = s[i][j] + 1
+            else:
+                s[i + 1][j + 1] = max(s[i + 1][j], s[i][j + 1])
+    return s
+
+
+def lcs_backtrack(s: np.ndarray) -> np.ndarray:
+    backtrack = np.zeros([len(s), len(s[0])], dtype='str')
+
+    for i in range(1, len(s)):
+        for j in range(1, len(s[0])):
+            if s[i][j] == s[i - 1][j]:
+                backtrack[i][j] = "↓"
+            elif s[i][j] == s[i][j - 1]:
+                backtrack[i][j] = "→"
+            else:
+                backtrack[i][j] = "↘"
+    return backtrack
+
+
+def output_lcs(backtrack: np.ndarray, v: str, w: str):
+    lcs = []
+    i, j = len(v), len(w)
+    while i > 0 and j > 0:
+        if backtrack[i][j] == "↓":
+            i -= 1
+        elif backtrack[i][j] == "→":
+            j -= 1
+        elif backtrack[i][j] == "↘":
+            lcs.append(v[i - 1])
+            i -= 1
+            j -= 1
+    return "".join(reversed(lcs))
+
+
 def main():
+    text = """AACCTTGG
+    ACACTGTGA"""
+    v, w = text.split()
+    s = lcs_path(v, w)
+    backtrack = lcs_backtrack(s)
+    print(backtrack)
+    lcs = output_lcs(backtrack, s, v, w)
+    print(lcs)
+    return
+
     text = """
     6 15
     2 0 4 2 0 1 4 4 1 1 2 4 2 3 3 3
