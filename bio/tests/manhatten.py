@@ -1,6 +1,6 @@
 from ..manhatten import (
     manhatten_tourist, parse_tourist_input, output_lcs, lcs_backtrack,
-    lcs_path, longest_dag_path, parse_graph
+    lcs_path, longest_dag_path, parse_graph, global_alignment_problem, blosum62
 )
 from ._lib import find_datasets
 
@@ -65,10 +65,25 @@ def test_longest_dag_path():
         assert output == output_sample, "{0} != {1}".format(output, output_sample)
 
 
+def test_global_alignment_problem():
+    dataset = [(
+        ("PLEASANTLY MEANLY"), ("8 PLEASANTLY -MEA--N-LY")
+    )] + find_datasets("global_alignment_problem")
+
+    for input_sample, output_sample in dataset:
+        v, w = input_sample.split()
+        score, v_aligned, w_aligned = output_sample.split()
+        score = int(score)
+        expected_output = (score, v_aligned, w_aligned)
+        output = global_alignment_problem(blosum62(), v, w, u=0, o=5)
+        assert output == expected_output, "{0} != {1}".format(output, expected_output)
+
+
 def main():
     #test_manhatten_tourist()
     #test_output_lcs()
     test_longest_dag_path()
+    test_global_alignment_problem()
     print("Success!")
 
 

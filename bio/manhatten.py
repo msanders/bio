@@ -54,7 +54,7 @@ def parse_tourist_input(text: str) -> (int, int, np.ndarray, np.ndarray):
 
 
 def lcs_path(v: str, w: str) -> np.ndarray:
-    s = np.zeros((len(v) + 1,len(w) + 1), dtype='i')
+    s = np.zeros((len(v) + 1, len(w) + 1), dtype='i')
     for i in range(len(v)):
         for j in range(len(w)):
             if v[i] == w[j]:
@@ -62,6 +62,28 @@ def lcs_path(v: str, w: str) -> np.ndarray:
             else:
                 s[i + 1][j + 1] = max(s[i + 1][j], s[i][j + 1])
     return s
+
+
+def lcs_scored_backtrack(matrix: dict, v: str, w: str, o: int, u: int) -> (
+    np.ndarray, np.ndarray
+):
+    s = np.zeros((len(v) + 1, len(w) + 1), dtype='i')
+    backtrack = np.zeros((len(v) + 1, len(w) + 1), dtype='str')
+
+    for i in range(1, len(w) + 1):
+        s[i][0] = -i * o
+    for j in range(1, len(w) + 1):
+        s[0][j] = -j * o
+
+    for i in range(1, len(v) + 1):
+        for j in range(1, len(w) + 1):
+            s[i][j], backtrack[i][j] = max(
+                (s[i - 1][j] - o, "↓"),
+                (s[i][j - 1] - o, "→"),
+                (s[i - 1][j - 1] + matrix[v[i - 1]][w[j - 1]], "↘"),
+                key=lambda x: x[0]
+            )
+    return s, backtrack
 
 
 def lcs_backtrack(s: np.ndarray) -> np.ndarray:
@@ -161,8 +183,69 @@ def longest_dag_path(graph: dict, source: int, sink: int) -> (int, list):
     return s[sink], path
 
 
+def parse_matrix(text: str) -> dict:
+    matrix = {}
+    lines = text.strip().splitlines()
+    keys = [x for x in lines[0].split()]
+
+    for key in keys:
+        matrix[key] = {}
+
+    for xkey, line in zip(keys, lines[1:]):
+        values = line.split()[1:]
+        for ykey, value in zip(keys, values):
+            matrix[xkey][ykey] = int(value)
+
+    return matrix
+
+
+def blosum62():
+    with open("bio/data/BLOSUM62.txt") as f:
+        return parse_matrix(f.read())
+
+
+def global_alignment_problem(matrix: dict, v: str, w: str, o: int, u: int) -> int:
+    s, backtrack = lcs_scored_backtrack(matrix, v, w, o, u)
+
+    v_aligned = ""
+    w_aligned = ""
+
+    i, j = len(v), len(w)
+    while i > 0 and j > 0:
+        direction = backtrack[i][j]
+        if direction == "↓":
+            v_aligned += v[i - 1]
+            w_aligned += "-"
+            i -= 1
+        elif direction == "→":
+            v_aligned += "-"
+            w_aligned += w[j - 1]
+            j -= 1
+        else:
+            v_aligned += v[i - 1]
+            w_aligned += w[j - 1]
+            i -= 1
+            j -= 1
+
+    # Prepend necessary indels to get back to (0, 0).
+    for repeat in range(i):
+        w_aligned += "-"
+        v_aligned += v[i - 1]
+
+    for repeat in range(j):
+        v_aligned += "-"
+        w_aligned += w[j - 1]
+
+    return (
+        s[-1][-1], 
+        "".join(reversed(v_aligned)), 
+        "".join(reversed(w_aligned))
+    )
+
 
 def main():
+    print(global_alignment_problem(blosum62(), "PLEASANTLY", "MEANLY", u=0, o=5))
+    return
     #text = """
     #0 -> 1,11,12,14,15,16,17,18,2,3,6,7,8
     #1 -> 11,14,17,18,19,2,7,8
