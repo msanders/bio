@@ -64,16 +64,16 @@ def lcs_path(v: str, w: str) -> np.ndarray:
     return s
 
 
-def lcs_scored_backtrack(matrix: dict, v: str, w: str, o: int, u: int) -> (
+def lcs_scored_backtrack(matrix: dict, v: str, w: str, o: int, u: int, min_cost: int) -> (
     np.ndarray, np.ndarray
 ):
     s = np.zeros((len(v) + 1, len(w) + 1), dtype='i')
     backtrack = np.zeros((len(v) + 1, len(w) + 1), dtype='str')
 
-    for i in range(1, len(w) + 1):
-        s[i][0] = -i * o
+    for i in range(1, len(v) + 1):
+        s[i][0] = -i * min_cost
     for j in range(1, len(w) + 1):
-        s[0][j] = -j * o
+        s[0][j] = -j * min_cost
 
     for i in range(1, len(v) + 1):
         for j in range(1, len(w) + 1):
@@ -81,6 +81,7 @@ def lcs_scored_backtrack(matrix: dict, v: str, w: str, o: int, u: int) -> (
                 (s[i - 1][j] - o, "↓"),
                 (s[i][j - 1] - o, "→"),
                 (s[i - 1][j - 1] + matrix[v[i - 1]][w[j - 1]], "↘"),
+                (-i * j * min_cost, "_"),
                 key=lambda x: x[0]
             )
     return s, backtrack
@@ -204,14 +205,24 @@ def blosum62():
         return parse_matrix(f.read())
 
 
-def global_alignment_problem(matrix: dict, v: str, w: str, o: int, u: int) -> int:
-    s, backtrack = lcs_scored_backtrack(matrix, v, w, o, u)
+def pam250():
+    with open("bio/data/PAM250.txt") as f:
+        return parse_matrix(f.read())
+
+
+def compute_alignment(matrix: dict, v: str,
+                      w: str, o: int, u: int,
+                      min_cost: int,
+                      backtrack_sink: object,
+                      backtrack_while: object) -> (int, str, str):
+    s, backtrack = lcs_scored_backtrack(matrix, v, w, o, u, min_cost)
 
     v_aligned = ""
     w_aligned = ""
 
-    i, j = len(v), len(w)
-    while i > 0 and j > 0:
+    i, j = backtrack_sink(s)
+    max_score = s[i][j]
+    while backtrack_while(backtrack, i, j):
         direction = backtrack[i][j]
         if direction == "↓":
             v_aligned += v[i - 1]
@@ -221,30 +232,54 @@ def global_alignment_problem(matrix: dict, v: str, w: str, o: int, u: int) -> in
             v_aligned += "-"
             w_aligned += w[j - 1]
             j -= 1
-        else:
+        elif direction == "↘":
             v_aligned += v[i - 1]
             w_aligned += w[j - 1]
             i -= 1
             j -= 1
 
     # Prepend necessary indels to get back to (0, 0).
-    for repeat in range(i):
-        w_aligned += "-"
-        v_aligned += v[i - 1]
+    if "_" not in backtrack.flatten():
+        for repeat in range(i):
+            w_aligned += "-"
+            v_aligned += v[i - 1]
 
-    for repeat in range(j):
-        v_aligned += "-"
-        w_aligned += w[j - 1]
+        for repeat in range(j):
+            v_aligned += "-"
+            w_aligned += w[j - 1]
 
     return (
-        s[-1][-1], 
-        "".join(reversed(v_aligned)), 
+        max_score,
+        "".join(reversed(v_aligned)),
         "".join(reversed(w_aligned))
+    )
+
+
+def global_alignment_problem(matrix: dict, v: str, w: str, o: int, u: int) -> (
+    int, str, str
+):
+    return compute_alignment(
+        matrix, v, w, o, u,
+        min_cost=o,
+        backtrack_sink=lambda _: (len(v), len(w)),
+        backtrack_while=lambda _, i, j: i > 0 and j > 0
+    )
+
+
+def local_alignment_problem(matrix: dict, v: str, w: str, o: int, u: int) -> (
+    int, str, str
+):
+    return compute_alignment(
+        matrix, v, w, o, u,
+        min_cost=0,
+        backtrack_sink=lambda s: np.unravel_index(s.argmax(), s.shape),
+        backtrack_while=lambda backtrack, i, j: i > 0 and j > 0 and backtrack[i][j] != "_"
     )
 
 
 def main():
     print(global_alignment_problem(blosum62(), "PLEASANTLY", "MEANLY", u=0, o=5))
+    print(local_alignment_problem(pam250(), "MEANLY", "PENALTY", u=0, o=5))
     return
     #text = """
     #0 -> 1,11,12,14,15,16,17,18,2,3,6,7,8
