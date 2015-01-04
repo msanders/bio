@@ -277,7 +277,31 @@ def local_alignment_problem(matrix: dict, v: str, w: str, o: int, u: int) -> (
     )
 
 
+def levenshtein_distance(v: str, w: str) -> int:
+    """
+    From http://hetland.org/coding/python/levenshtein.py
+    """
+    n, m = len(v), len(w)
+    if n > m:
+        # Make sure n <= m, to use O(min(n,m)) space
+        v,w = w,v
+        n,m = m,n
+
+    current = range(n + 1)
+    for i in range(1, m + 1):
+        previous, current = current, [i] + [0] * n
+        for j in range(1, n + 1):
+            add, delete = previous[j] + 1, current[j - 1] + 1
+            change = previous[j - 1]
+            if v[j - 1] != w[i - 1]:
+                change = change + 1
+            current[j] = min(add, delete, change)
+
+    return current[n]
+
+
 def main():
+    print(levenshtein_distance("PLEASANTLY", "MEANLY"))
     print(global_alignment_problem(blosum62(), "PLEASANTLY", "MEANLY", u=0, o=5))
     print(local_alignment_problem(pam250(), "MEANLY", "PENALTY", u=0, o=5))
     return
