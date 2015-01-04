@@ -64,9 +64,12 @@ def lcs_path(v: str, w: str) -> np.ndarray:
     return s
 
 
-def lcs_scored_backtrack(matrix: dict, v: str, w: str, o: int, u: int, min_cost: int) -> (
-    np.ndarray, np.ndarray
-):
+def lcs_scored_backtrack(matrix: dict,
+                         v: str, w: str,
+                         o: int, u: int,
+                         min_cost: int,
+                         backtrack_stop: bool = None) -> (np.ndarray,
+                                                          np.ndarray):
     s = np.zeros((len(v) + 1, len(w) + 1), dtype='i')
     backtrack = np.zeros((len(v) + 1, len(w) + 1), dtype='str')
 
@@ -77,13 +80,13 @@ def lcs_scored_backtrack(matrix: dict, v: str, w: str, o: int, u: int, min_cost:
 
     for i in range(1, len(v) + 1):
         for j in range(1, len(w) + 1):
-            s[i][j], backtrack[i][j] = max(
+            scores = [
                 (s[i - 1][j] - o, "↓"),
                 (s[i][j - 1] - o, "→"),
                 (s[i - 1][j - 1] + matrix[v[i - 1]][w[j - 1]], "↘"),
-                (-i * j * min_cost, "_"),
-                key=lambda x: x[0]
-            )
+            ] + ([(-i * j * min_cost, "_")] if backtrack_stop else [])
+
+            s[i][j], backtrack[i][j] = max(scores, key=lambda x: x[0])
     return s, backtrack
 
 
@@ -214,15 +217,17 @@ def compute_alignment(matrix: dict, v: str,
                       w: str, o: int, u: int,
                       min_cost: int,
                       backtrack_sink: object,
-                      backtrack_while: object) -> (int, str, str):
-    s, backtrack = lcs_scored_backtrack(matrix, v, w, o, u, min_cost)
+                      backtrack_stop: bool = None,
+                      prepend_indels: bool = None) -> (int, str, str):
+    s, backtrack = lcs_scored_backtrack(matrix, v, w, o, u, min_cost,
+                                        backtrack_stop=backtrack_stop)
 
     v_aligned = ""
     w_aligned = ""
 
     i, j = backtrack_sink(s)
     max_score = s[i][j]
-    while backtrack_while(backtrack, i, j):
+    while i > 0 and j > 0 and backtrack[i][j] != "_":
         direction = backtrack[i][j]
         if direction == "↓":
             v_aligned += v[i - 1]
@@ -239,7 +244,7 @@ def compute_alignment(matrix: dict, v: str,
             j -= 1
 
     # Prepend necessary indels to get back to (0, 0).
-    if "_" not in backtrack.flatten():
+    if prepend_indels:
         for repeat in range(i):
             w_aligned += "-"
             v_aligned += v[i - 1]
@@ -262,7 +267,7 @@ def global_alignment_problem(matrix: dict, v: str, w: str, o: int, u: int) -> (
         matrix, v, w, o, u,
         min_cost=o,
         backtrack_sink=lambda _: (len(v), len(w)),
-        backtrack_while=lambda _, i, j: i > 0 and j > 0
+        prepend_indels=True
     )
 
 
@@ -272,8 +277,25 @@ def local_alignment_problem(matrix: dict, v: str, w: str, o: int, u: int) -> (
     return compute_alignment(
         matrix, v, w, o, u,
         min_cost=0,
-        backtrack_sink=lambda s: np.unravel_index(s.argmax(), s.shape),
-        backtrack_while=lambda backtrack, i, j: i > 0 and j > 0 and backtrack[i][j] != "_"
+        backtrack_stop=True,
+        backtrack_sink=lambda s: np.unravel_index(s.argmax(), s.shape)
+    )
+
+
+def fitting_alignment_problem(v: str, w: str, o: int, u: int) -> (
+    int, str, str
+):
+    def backtrack_sink(s: np.ndarray) -> (int, int):
+        j = len(w)
+        i = max(enumerate([s[row][j] for row in range(len(w), len(v))]),
+                key=lambda x: x[1])[0] + len(w)
+        return i, j
+
+    matrix = {x: {y: 1 if x == y else -1 for y in w} for x in v}
+    return compute_alignment(
+        matrix, v, w, o, u,
+        min_cost=0,
+        backtrack_sink=backtrack_sink,
     )
 
 
@@ -304,6 +326,7 @@ def main():
     print(levenshtein_distance("PLEASANTLY", "MEANLY"))
     print(global_alignment_problem(blosum62(), "PLEASANTLY", "MEANLY", u=0, o=5))
     print(local_alignment_problem(pam250(), "MEANLY", "PENALTY", u=0, o=5))
+    print(fitting_alignment_problem("GTAGGCTTAAGGTTA", "TAGATA", u=0, o=1))
     return
     #text = """
     #0 -> 1,11,12,14,15,16,17,18,2,3,6,7,8

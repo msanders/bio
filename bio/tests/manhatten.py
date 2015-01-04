@@ -1,7 +1,8 @@
 from ..manhatten import (
     manhatten_tourist, parse_tourist_input, output_lcs, lcs_backtrack,
     lcs_path, longest_dag_path, parse_graph, global_alignment_problem, blosum62,
-    pam250, local_alignment_problem, levenshtein_distance
+    pam250, local_alignment_problem, levenshtein_distance,
+    fitting_alignment_problem
 )
 from ._lib import find_datasets
 
@@ -94,6 +95,20 @@ def test_local_alignment_problem():
         assert output == expected_output, "{0} != {1}".format(output, expected_output)
 
 
+def test_fitting_alignment_problem():
+    dataset = [(
+        ("GTAGGCTTAAGGTTA TAGATA"), ("2 TAGGCTTA TAGA-T-A")
+    )] + find_datasets("fitting_alignment_problem")
+
+    for input_sample, output_sample in dataset:
+        v, w = input_sample.strip().split()
+        score, v_aligned, w_aligned = output_sample.split()
+        score = int(score)
+        expected_output = (score, v_aligned, w_aligned)
+        output = fitting_alignment_problem(v, w, u=0, o=1)
+        assert output == expected_output, "{0} != {1}".format(output, expected_output)
+
+
 def test_levenshtein_distance():
     dataset = [(
         "PLEASANTLY MEANLY", 5
@@ -112,6 +127,7 @@ def main():
     test_global_alignment_problem()
     test_local_alignment_problem()
     test_levenshtein_distance()
+    test_fitting_alignment_problem()
     print("Success!")
 
 
