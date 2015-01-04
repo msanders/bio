@@ -2,7 +2,7 @@ from ..manhatten import (
     manhatten_tourist, parse_tourist_input, output_lcs, lcs_backtrack,
     lcs_path, longest_dag_path, parse_graph, global_alignment_problem, blosum62,
     pam250, local_alignment_problem, levenshtein_distance,
-    fitting_alignment_problem
+    fitting_alignment_problem, overlap_alignment_problem
 )
 from ._lib import find_datasets
 
@@ -69,7 +69,7 @@ def test_longest_dag_path():
 
 def test_global_alignment_problem():
     dataset = [(
-        ("PLEASANTLY MEANLY"), ("8 PLEASANTLY -MEA--N-LY")
+        "PLEASANTLY MEANLY", "8 PLEASANTLY -MEA--N-LY"
     )] + find_datasets("global_alignment_problem")
 
     for input_sample, output_sample in dataset:
@@ -83,7 +83,7 @@ def test_global_alignment_problem():
 
 def test_local_alignment_problem():
     dataset = [(
-        ("MEANLY PENALTY"), ("15 EANL-Y ENALTY")
+        "MEANLY PENALTY", "15 EANL-Y ENALTY"
     )] + find_datasets("local_alignment_problem")
 
     for input_sample, output_sample in dataset:
@@ -97,7 +97,7 @@ def test_local_alignment_problem():
 
 def test_fitting_alignment_problem():
     dataset = [(
-        ("GTAGGCTTAAGGTTA TAGATA"), ("2 TAGGCTTA TAGA-T-A")
+        "GTAGGCTTAAGGTTA TAGATA", "2 TAGGCTTA TAGA-T-A"
     )] + find_datasets("fitting_alignment_problem")
 
     for input_sample, output_sample in dataset:
@@ -106,6 +106,20 @@ def test_fitting_alignment_problem():
         score = int(score)
         expected_output = (score, v_aligned, w_aligned)
         output = fitting_alignment_problem(v, w, u=0, o=1)
+        assert output == expected_output, "{0} != {1}".format(output, expected_output)
+
+
+def test_overlap_alignment_problem():
+    dataset = [(
+        "PAWHEAE HEAGAWGHEE", "1 HEAE HEA-"
+    )] + find_datasets("overlap_alignment_problem")
+
+    for input_sample, output_sample in dataset:
+        v, w = input_sample.strip().split()
+        score, v_aligned, w_aligned = output_sample.split()
+        score = int(score)
+        expected_output = (score, v_aligned, w_aligned)
+        output = overlap_alignment_problem(v, w, u=0, o=2)
         assert output == expected_output, "{0} != {1}".format(output, expected_output)
 
 
@@ -128,6 +142,7 @@ def main():
     test_local_alignment_problem()
     test_levenshtein_distance()
     test_fitting_alignment_problem()
+    test_overlap_alignment_problem()
     print("Success!")
 
 

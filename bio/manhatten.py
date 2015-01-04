@@ -291,11 +291,35 @@ def fitting_alignment_problem(v: str, w: str, o: int, u: int) -> (
                 key=lambda x: x[1])[0] + len(w)
         return i, j
 
-    matrix = {x: {y: 1 if x == y else -1 for y in w} for x in v}
+    matrix = {x: {y: 1 if x == y else -o for y in w} for x in v}
     return compute_alignment(
         matrix, v, w, o, u,
         min_cost=0,
         backtrack_sink=backtrack_sink,
+    )
+
+
+def overlap_alignment_problem(v: str, w: str, o: int, u: int) -> (
+    int, str, str
+):
+    def backtrack_sink(s: np.ndarray) -> (int, int):
+        max_score = -3 * (len(v) + len(w))
+        max_indices = (-1, -1)
+
+        # Check for maximums along each last row or column.
+        for i in range(1, len(v) + 1):
+            for j in range(len(w) + 1):
+                if (i == len(v) or j == len(w)) and s[i][j] > max_score:
+                    max_score = s[i][j]
+                    max_indices = (i, j)
+
+        return max_indices
+
+    matrix = {x: {y: 1 if x == y else -o for y in w} for x in v}
+    return compute_alignment(
+        matrix, v, w, o, u,
+        min_cost=0,
+        backtrack_sink=backtrack_sink
     )
 
 
@@ -327,6 +351,7 @@ def main():
     print(global_alignment_problem(blosum62(), "PLEASANTLY", "MEANLY", u=0, o=5))
     print(local_alignment_problem(pam250(), "MEANLY", "PENALTY", u=0, o=5))
     print(fitting_alignment_problem("GTAGGCTTAAGGTTA", "TAGATA", u=0, o=1))
+    print(overlap_alignment_problem("PAWHEAE", "HEAGAWGHEE", u=0, o=2))
     return
     #text = """
     #0 -> 1,11,12,14,15,16,17,18,2,3,6,7,8
