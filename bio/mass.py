@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pyximport
+import functools
 pyximport.install(setup_args={
     "include_dirs": np.get_include(),
 })  # pylint: disable=F0401
@@ -44,7 +45,17 @@ def peptide_string(peptide: tuple) -> str:
             output += str(num)
     return output
 
+
+MASSES = {57, 71, 87, 97, 99, 101, 103, 113, 114, 115, 128, 129, 131, 137, 147, 156, 163, 186}
+@functools.lru_cache(2 ** 10)
+def peptide_count_with_mass(mass: int) -> int:
+    count = 1 if mass in MASSES else 0
+    count += sum(peptide_count_with_mass(mass - x) for x in MASSES if x < mass)
+    return count
+
+
 def main():
+    print(peptide_count_with_mass(1024))
     #print(" ".join(subpeptides("ELEL")))
     #print(" ".join([""] + subpeptides("NQEL") + ["NQEL"]))
     print(" ".join(map(str, linearspectrum_brute("NQEL"))))
